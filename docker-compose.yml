@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16
+    container_name: modern-core-db
+    environment:
+      POSTGRES_DB: modern_core
+      POSTGRES_USER: core
+      POSTGRES_PASSWORD: core
+    ports:
+      - "5435:5432"
+    volumes:
+      - modern-core-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U core -d modern_core"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    container_name: modern-core-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://core:core@db:5432/modern_core
+      PORT: "8091"
+    ports:
+      - "8091:8091"
+
+volumes:
+  modern-core-pg:
